@@ -1,0 +1,23 @@
+h1 {
+    text-align: center;
+    text-transform: uppercase;
+    color: green;
+}
+
+body {
+    padding: 20px;
+    background-color: yellow;
+}
+
+p {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: medium;
+}
+
+p.corpoDoTexto {
+    color: yellowgreen;
+}
+
+p.corpoDoTexto2 {
+    color: blue;
+}
