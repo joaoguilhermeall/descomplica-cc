@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Pensar e Responder 03</title>
+    <style>
+        body,
+        div,
+        section {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 100%;
+            font: inherit;
+            vertical-align: baseline;
+        }
+    </style>
+    <style>
+        .flex-content {
+            display: flexbox;
+            flex-direction: row;
+            flex-wrap: wrap;
+            width: auto;
+            justify-content: center;
+        }
+
+        .flex-row {
+            display: flex;
+            width: auto;
+            justify-content: center;
+            margin: 10px;
+        }
+
+        .header {
+            background-color: #9D8DF1;
+            color: #f4f4f4;
+            padding: 50px;
+            width: auto;
+        }
+
+        .content {
+            padding: 50px;
+            width: auto;
+            background-color: #1CFEBA;
+            height: 100vh;
+        }
+    </style>
+</head>
+
+<body>
+    <section class="header">
+        <h1>Pensar e Responder 03</h1>
+        <h2>Prática Integradora - Desenvolvimento de Software</h2>
+    </section>
+    <section class="content flex-content">
+        <div class="flex-row">
+            <label for="input">Input: </label>
+            <input id="input" type="number">
+        </div>
+        <div class="flex-row">
+            <button onclick="javascript:sin()">sin()</button>
+            <button onclick="javascript:cos()">cos()</button>
+            <button onclick="javascript:tan()">tan()</button>
+            <button onclick="javascript:sqrt()">sqrt()</button>
+            <button onclick="javascript:random()">random()</button>
+            <button onclick="javascript:clean()">clean()</button>
+        </div>
+        <div class="flex-row">
+            <p>Resultado: <span id="result"></span></p>
+        </div>
+    </section>
+    <script>
+        function getInputValue() {
+            const input = document.getElementById("input")
+            return Number(input.value === "" ? NaN : input.value);
+        }
+        function writeResult(result) {
+            document.getElementById("result").textContent = result;
+        }
+        function sin() {
+            writeResult(Math.sin(getInputValue()));
+        }
+        function cos() {
+            writeResult(Math.cos(getInputValue()));
+        }
+        function tan() {
+            writeResult(Math.tan(getInputValue()));
+        }
+        function sqrt() {
+            writeResult(Math.sqrt(getInputValue()));
+        }
+        function random() {
+            writeResult(Math.random());
+        }
+        function clean() {
+            writeResult("");
+        }
+    </script>
+</body>
+
+</html>
