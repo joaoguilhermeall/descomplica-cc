@@ -2,3 +2,13 @@
 
 
 *.class
+
+# Python Environment
+__pycache__/
+venv/
+.env/
+.idea/
+*.pyc
+*.pyo
+*.pyd
+*.pyz
