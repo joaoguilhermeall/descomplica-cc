@@ -1,0 +1,7 @@
+# Python dependencies for AWS Lambda Function
+# This project uses only Python built-in libraries (urllib, json, os)
+# No external dependencies are required
+
+# If you need to add dependencies in the future, list them here:
+# requests==2.31.0
+# boto3==1.34.0
