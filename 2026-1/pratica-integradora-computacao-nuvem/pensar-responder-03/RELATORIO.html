@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Relat&oacute;rio de Implementa&ccedil;&atilde;o&colon; Banco de Dados MySQL na AWS RDS</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <h1 id="relatório-de-implementação-banco-de-dados-mysql-na-aws-rds">Relatório de Implementação: Banco de Dados MySQL na AWS RDS</h1>
+<p><strong>Disciplina</strong>: Prática Integradora - Computação em Nuvem<br>
+<strong>Autor</strong>: João Guilherme<br>
+<strong>Data</strong>: 17 de março de 2026</p>
+<hr>
+<h2 id="1-introdução">1. Introdução</h2>
+<p>Esta atividade consiste na criação de uma instância pública de banco de dados MySQL na nuvem utilizando o serviço AWS RDS (Relational Database Service). O banco de dados foi desenvolvido para armazenar frases e traduções de um projeto pessoal de aprendizado de inglês, organizando o conteúdo por nível de dificuldade e acompanhando o progresso de revisão.</p>
+<p>O provisionamento da infraestrutura foi realizado utilizando Terraform, uma ferramenta de Infrastructure as Code (IaC), ao invés do console web da AWS. Esta escolha se justifica pela experiência prévia adquirida em projetos anteriores e pela adoção de boas práticas de DevOps, que proporcionam:</p>
+<ul>
+<li><strong>Reprodutibilidade</strong>: O mesmo código Terraform pode recriar a infraestrutura de forma idêntica em diferentes ambientes</li>
+<li><strong>Versionamento</strong>: Todo o código de infraestrutura está versionado no Git, permitindo rastrear mudanças e realizar rollback se necessário</li>
+<li><strong>Automação</strong>: Possibilita integração com pipelines de CI/CD para deployment automatizado</li>
+<li><strong>Profissionalismo</strong>: Abordagem amplamente utilizada em ambientes corporativos e projetos reais</li>
+</ul>
+<p>A implementação foi mantida simples e direta, consolidando toda a configuração em um único arquivo Terraform, facilitando o aprendizado e a compreensão dos recursos necessários para provisionar um banco de dados na nuvem.</p>
+<hr>
+<h2 id="2-implementação">2. Implementação</h2>
+<h3 id="estrutura-do-projeto">Estrutura do Projeto</h3>
+<p>A implementação foi organizada da seguinte forma:</p>
+<pre><code>pensar-responder-03/
+├── terraform/
+│   └── main.tf                     # Configuração Terraform completa
+├── sql/
+│   └── schema.sql                  # Schema do banco de dados
+├── RELATORIO.md                    # Este documento
+└── README.md                       # Guia rápido de uso
+</code></pre>
+<h3 id="recursos-terraform-criados">Recursos Terraform Criados</h3>
+<p>O arquivo <a href="terraform/main.tf">terraform/main.tf</a> provisiona os seguintes recursos na AWS:</p>
+<ol>
+<li>
+<p><strong>random_password</strong> (<code>db_password</code>)</p>
+<ul>
+<li>Gera senha aleatória de 16 caracteres para o banco de dados</li>
+<li>Sem caracteres especiais para evitar problemas de escape</li>
+<li>Armazenada no state do Terraform e exibida via output sensível</li>
+</ul>
+</li>
+<li>
+<p><strong>aws_security_group</strong> (<code>mysql_sg</code>)</p>
+<ul>
+<li>Nome: <code>english-learning-mysql-sg</code></li>
+<li>Regra de entrada (ingress): Permite conexões TCP na porta 3306 de qualquer origem (0.0.0.0/0)</li>
+<li>Regra de saída (egress): Permite todo tráfego de saída</li>
+<li><strong>Nota</strong>: Acesso público é apenas para fins educacionais; em produção deve-se restringir por IP</li>
+</ul>
+</li>
+<li>
+<p><strong>aws_db_instance</strong> (<code>english_learning_db</code>)</p>
+<ul>
+<li>Identificador: <code>english-learning-db</code></li>
+<li>Engine: MySQL 8.0.35</li>
+<li>Classe de instância: <code>db.t3.micro</code> (elegível ao free tier)</li>
+<li>Armazenamento: 20GB GP2 (SSD)</li>
+<li>Nome do banco: <code>english_learning</code></li>
+<li>Usuário: <code>admin</code></li>
+<li>Senha: Gerada pelo <code>random_password</code></li>
+<li>Público: <code>publicly_accessible = true</code></li>
+<li>Backup: Desabilitado (retention = 0)</li>
+<li>Snapshot final: Desabilitado para facilitar destruição</li>
+</ul>
+</li>
+</ol>
+<h3 id="schema-do-banco-de-dados">Schema do Banco de Dados</h3>
+<p>O arquivo <a href="sql/schema.sql">sql/schema.sql</a> define a estrutura do banco:</p>
+<p><strong>Tabela <code>frases</code></strong>:</p>
+<ul>
+<li><code>id</code>: INT AUTO_INCREMENT PRIMARY KEY</li>
+<li><code>frase_ingles</code>: VARCHAR(500) - Frase em inglês</li>
+<li><code>frase_portugues</code>: VARCHAR(500) - Tradução em português</li>
+<li><code>revisada_em</code>: DATETIME - Data da última revisão (nullable)</li>
+<li><code>dominio</code>: ENUM('facil', 'media', 'dificil') - Nível de dificuldade</li>
+<li><code>criada_em</code>: TIMESTAMP - Data de criação automática</li>
+<li><code>atualizada_em</code>: TIMESTAMP - Atualização automática</li>
+</ul>
+<p><strong>Índices</strong>:</p>
+<ul>
+<li><code>idx_dominio</code>: Facilita busca por nível de dificuldade</li>
+<li><code>idx_revisada_em</code>: Facilita busca por frases que precisam revisão</li>
+</ul>
+<p>O schema inclui 5 frases de exemplo para teste, distribuídas entre os três níveis de dificuldade.</p>
+<hr>
+<h2 id="3-como-fazer-o-deploy-e-testar">3. Como Fazer o Deploy e Testar</h2>
+<h3 id="pré-requisitos">Pré-requisitos</h3>
+<ul>
+<li>AWS CLI configurado com credenciais válidas (<code>aws configure</code>)</li>
+<li>Terraform instalado (versão &gt;= 1.0)</li>
+<li>Cliente MySQL instalado (<code>mysql-client</code> no Linux/Mac ou MySQL Workbench)</li>
+</ul>
+<h3 id="passo-1-inicializar-terraform">Passo 1: Inicializar Terraform</h3>
+<p>Navegue até o diretório do Terraform e inicialize os providers:</p>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> terraform
+terraform init
+</code></pre>
+<p>Este comando baixa os providers necessários (AWS e Random) e prepara o ambiente.</p>
+<h3 id="passo-2-visualizar-o-plano-de-execução">Passo 2: Visualizar o Plano de Execução</h3>
+<p>Antes de criar recursos, visualize o que será criado:</p>
+<pre><code class="language-bash">terraform plan
+</code></pre>
+<p>Você verá 3 recursos a serem criados:</p>
+<ul>
+<li>1 security group</li>
+<li>1 instância RDS MySQL</li>
+<li>1 senha aleatória (random_password)</li>
+</ul>
+<h3 id="passo-3-criar-a-infraestrutura">Passo 3: Criar a Infraestrutura</h3>
+<p>Execute o apply para provisionar os recursos na AWS:</p>
+<pre><code class="language-bash">terraform apply
+</code></pre>
+<p>Digite <code>yes</code> quando solicitado para confirmar. O processo leva aproximadamente 5-10 minutos, pois a criação de instâncias RDS requer tempo para configuração e inicialização.</p>
+<h3 id="passo-4-obter-credenciais-e-endpoint">Passo 4: Obter Credenciais e Endpoint</h3>
+<p>Após a conclusão, visualize os outputs do Terraform:</p>
+<pre><code class="language-bash">terraform output
+</code></pre>
+<p>Para exibir a senha (que é sensível):</p>
+<pre><code class="language-bash">terraform output db_password
+</code></pre>
+<p>Anote:</p>
+<ul>
+<li><strong>Endpoint</strong>: Endereço para conexão (ex: <code>english-learning-db.xxxxx.us-east-1.rds.amazonaws.com</code>)</li>
+<li><strong>Usuário</strong>: <code>admin</code></li>
+<li><strong>Senha</strong>: Exibida pelo comando acima</li>
+<li><strong>Banco</strong>: <code>english_learning</code></li>
+</ul>
+<h3 id="passo-5-conectar-ao-banco-de-dados">Passo 5: Conectar ao Banco de Dados</h3>
+<p>Use o cliente MySQL para conectar:</p>
+<pre><code class="language-bash">mysql -h &lt;ENDPOINT_ADDRESS&gt; -u admin -p
+</code></pre>
+<p>Digite a senha quando solicitado. Você verá o prompt do MySQL se a conexão for bem-sucedida.</p>
+<h3 id="passo-6-executar-o-schema">Passo 6: Executar o Schema</h3>
+<p>Execute o schema SQL para criar a tabela e inserir dados de exemplo:</p>
+<pre><code class="language-bash">mysql -h &lt;ENDPOINT_ADDRESS&gt; -u admin -p english_learning &lt; ../sql/schema.sql
+</code></pre>
+<p>Ou, dentro do prompt do MySQL:</p>
+<pre><code class="language-sql">USE english_learning;
+SOURCE ..<span class="hljs-operator">/</span><span class="hljs-keyword">sql</span><span class="hljs-operator">/</span>schema.sql;
+</code></pre>
+<h3 id="passo-7-validar-a-instalação">Passo 7: Validar a Instalação</h3>
+<p>Verifique se a tabela foi criada e contém dados:</p>
+<pre><code class="language-bash">mysql -h &lt;ENDPOINT_ADDRESS&gt; -u admin -p -e <span class="hljs-string">&quot;USE english_learning; SELECT * FROM frases;&quot;</span>
+</code></pre>
+<p>Você deve ver 5 frases de exemplo listadas.</p>
+<h3 id="passo-8-destruir-os-recursos-importante">Passo 8: Destruir os Recursos (IMPORTANTE)</h3>
+<p><strong>Após concluir a atividade e capturar o endpoint para entrega</strong>, destrua todos os recursos para evitar cobranças:</p>
+<pre><code class="language-bash">terraform destroy
+</code></pre>
+<p>Digite <code>yes</code> para confirmar. Todos os recursos serão removidos da AWS, incluindo o banco de dados (sem snapshot final).</p>
+<hr>
+<h2 id="4-conclusão">4. Conclusão</h2>
+<p>A implementação do banco de dados MySQL na AWS RDS foi concluída com sucesso utilizando Terraform como ferramenta de Infrastructure as Code. O projeto demonstrou os benefícios de automatizar o provisionamento de infraestrutura em nuvem, garantindo consistência, rastreabilidade e facilidade de reprodução.</p>
+<p><strong>Conhecimentos reforçados:</strong></p>
+<ol>
+<li>
+<p><strong>AWS RDS</strong>: Compreensão prática de como provisionar e configurar bancos de dados gerenciados na AWS, incluindo configurações de conectividade, segurança e armazenamento</p>
+</li>
+<li>
+<p><strong>Terraform</strong>: Aprofundamento no uso de IaC para criar recursos na nuvem de forma declarativa, incluindo gerenciamento de dependências entre recursos (security group → RDS) e uso de recursos auxiliares (random_password)</p>
+</li>
+<li>
+<p><strong>Segurança na Nuvem</strong>: Entendimento dos conceitos de security groups, controle de acesso público e gerenciamento seguro de credenciais, mesmo que configurado de forma permissiva para fins educacionais</p>
+</li>
+<li>
+<p><strong>MySQL</strong>: Prática no design de schemas relacionais, definição de tipos de dados apropriados, uso de enums para valores fixos e implementação de índices para otimização de consultas</p>
+</li>
+<li>
+<p><strong>Boas Práticas DevOps</strong>: Aplicação de princípios de automação, versionamento de infraestrutura e documentação técnica clara</p>
+</li>
+</ol>
+<p>A experiência consolidou o entendimento de que bancos de dados em nuvem oferecem escalabilidade, disponibilidade e facilidade de gerenciamento superiores às soluções on-premises, sendo fundamentais para aplicações modernas. A combinação de serviços gerenciados (RDS) com ferramentas de automação (Terraform) representa o estado da arte em operações de infraestrutura, preparando para cenários profissionais reais.</p>
+
+            
+            
+        </body>
+        </html>
