@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Relat&oacute;rio de Implementa&ccedil;&atilde;o&colon; Backup no Amazon S3 com Versionamento</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+<link href="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.css" rel="stylesheet" type="text/css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <h1 id="relatório-de-implementação-backup-no-amazon-s3-com-versionamento">Relatório de Implementação: Backup no Amazon S3 com Versionamento</h1>
+<p><strong>Disciplina</strong>: Prática Integradora - Computação em Nuvem
+<strong>Autor</strong>: João Guilherme
+<strong>Data</strong>: 17 de março de 2026</p>
+<hr>
+<h2 id="1-introdução">1. Introdução</h2>
+<p>Esta atividade consiste na configuração de um bucket S3 na AWS com versionamento ativado para simular uma rotina de backup, demonstrando como esse recurso mitiga ataques do tipo ransomware. O versionamento de objetos no S3 permite manter múltiplas versões de um mesmo arquivo, possibilitando a recuperação de versões anteriores em caso de sobrescrita acidental ou ataque malicioso.</p>
+<p>O provisionamento da infraestrutura foi realizado utilizando Terraform, uma ferramenta de Infrastructure as Code (IaC), seguindo as boas práticas adotadas em projetos anteriores desta disciplina. Após a criação do bucket, foram realizadas operações via AWS CLI para validar o funcionamento do versionamento.</p>
+<p>A implementação demonstra conceitos fundamentais de segurança na nuvem, incluindo backup automatizado, recuperação de desastres e proteção contra ransomware - ameaça crescente que criptografa dados e exige resgate para liberá-los.</p>
+<hr>
+<h2 id="2-implementação">2. Implementação</h2>
+<h3 id="estrutura-do-projeto">Estrutura do Projeto</h3>
+<p>A implementação foi organizada da seguinte forma:</p>
+<pre><code>pensar-responder-04/
+├── terraform/
+│   └── main.tf                     # Configuração Terraform do bucket S3
+├── backup_v1.zip                   # Arquivo de backup versão 1 (exemplo)
+├── backup_v2.zip                   # Arquivo de backup versão 2 (exemplo)
+└── RELATORIO.md                    # Este documento
+</code></pre>
+<h3 id="recursos-terraform-criados">Recursos Terraform Criados</h3>
+<p>O arquivo <code>terraform/main.tf</code> provisiona os seguintes recursos na AWS:</p>
+<ol>
+<li>
+<p><strong>aws_s3_bucket</strong> (<code>backup_bucket</code>)</p>
+<ul>
+<li>Nome: <code>bucketbackup2025</code></li>
+<li>Região: <code>sa-east-1</code> (São Paulo)</li>
+<li>Bucket para armazenamento de backups com nomenclatura única global</li>
+</ul>
+</li>
+<li>
+<p><strong>aws_s3_bucket_versioning</strong> (<code>backup_versioning</code>)</p>
+<ul>
+<li>Status: <code>Enabled</code></li>
+<li>Habilita o versionamento automático de todos os objetos</li>
+<li>Equivalente ao passo 12 da atividade proposta</li>
+<li>Permite recuperação de versões anteriores e proteção contra exclusão acidental</li>
+</ul>
+</li>
+</ol>
+<h3 id="configuração-de-versionamento">Configuração de Versionamento</h3>
+<p>O versionamento no S3 funciona da seguinte forma:</p>
+<ul>
+<li>Cada objeto enviado para o bucket recebe um ID de versão único</li>
+<li>Ao sobrescrever um arquivo existente, a versão antiga é preservada</li>
+<li>É possível listar todas as versões de um objeto</li>
+<li>Versões antigas podem ser restauradas a qualquer momento</li>
+<li>Proteção contra exclusão: ao &quot;deletar&quot; um arquivo, apenas uma marca de exclusão é criada, mantendo todas as versões</li>
+</ul>
+<hr>
+<h2 id="3-como-fazer-o-deploy-e-testar">3. Como Fazer o Deploy e Testar</h2>
+<h3 id="pré-requisitos">Pré-requisitos</h3>
+<ul>
+<li>AWS CLI configurado com credenciais válidas (<code>aws configure</code>)</li>
+<li>Terraform instalado (versão &gt;= 1.0)</li>
+<li>Arquivos de backup de exemplo criados (ou use arquivos de teste)</li>
+</ul>
+<h3 id="passo-1-criar-arquivos-de-teste">Passo 1: Criar Arquivos de Teste</h3>
+<p>Crie dois arquivos de backup para simular versionamento:</p>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> pensar-responder-04
+<span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;Backup version 1&quot;</span> &gt; backup_v1.txt
+zip backup_v1.zip backup_v1.txt
+<span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;Backup version 2 - updated content&quot;</span> &gt; backup_v2.txt
+zip backup_v2.zip backup_v2.txt
+</code></pre>
+<h3 id="passo-2-inicializar-terraform">Passo 2: Inicializar Terraform</h3>
+<p>Navegue até o diretório do Terraform e inicialize os providers:</p>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> terraform
+terraform init
+</code></pre>
+<p>Este comando baixa o provider AWS necessário e prepara o ambiente.</p>
+<h3 id="passo-3-visualizar-o-plano-de-execução">Passo 3: Visualizar o Plano de Execução</h3>
+<p>Antes de criar recursos, visualize o que será criado:</p>
+<pre><code class="language-bash">terraform plan
+</code></pre>
+<p>Você verá 2 recursos a serem criados:</p>
+<ul>
+<li>1 bucket S3 (<code>bucketbackup2025</code>)</li>
+<li>1 configuração de versionamento</li>
+</ul>
+<h3 id="passo-4-criar-a-infraestrutura">Passo 4: Criar a Infraestrutura</h3>
+<p>Execute o apply para provisionar os recursos na AWS:</p>
+<pre><code class="language-bash">terraform apply
+</code></pre>
+<p>Digite <code>yes</code> quando solicitado para confirmar. O processo leva aproximadamente 1-2 minutos.</p>
+<p><strong>Equivalente ao passo 12 da atividade</strong>: O versionamento é ativado automaticamente pelo Terraform.</p>
+<h3 id="passo-5-verificar-bucket-criado">Passo 5: Verificar Bucket Criado</h3>
+<p>Liste os buckets S3 para confirmar a criação:</p>
+<pre><code class="language-bash">aws s3 <span class="hljs-built_in">ls</span>
+</code></pre>
+<p>Você deve ver <code>bucketbackup2025</code> na listagem.</p>
+<h3 id="passo-6-enviar-primeira-versão-do-backup">Passo 6: Enviar Primeira Versão do Backup</h3>
+<p>Envie o primeiro arquivo de backup via AWS CLI:</p>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> ..
+aws s3 <span class="hljs-built_in">cp</span> backup_v1.zip s3://bucketbackup2025/
+</code></pre>
+<p>Saída esperada: <code>upload: ./backup_v1.zip to s3://bucketbackup2025/backup_v1.zip</code></p>
+<h3 id="passo-7-enviar-segunda-versão-sobrescrita">Passo 7: Enviar Segunda Versão (Sobrescrita)</h3>
+<p>Envie o segundo arquivo com o <strong>mesmo nome</strong> para criar uma nova versão:</p>
+<pre><code class="language-bash">aws s3 <span class="hljs-built_in">cp</span> backup_v2.zip s3://bucketbackup2025/backup_v1.zip
+</code></pre>
+<p>Note que estamos enviando <code>backup_v2.zip</code> mas salvando como <code>backup_v1.zip</code> no bucket, simulando uma atualização do mesmo arquivo de backup.</p>
+<h3 id="passo-8-listar-versões-do-objeto">Passo 8: Listar Versões do Objeto</h3>
+<p>Verifique que ambas as versões foram preservadas:</p>
+<pre><code class="language-bash">aws s3api list-object-versions --bucket bucketbackup2025
+</code></pre>
+<p><strong>Equivalente ao passo 17 da atividade</strong>: O comando retorna JSON com duas versões do arquivo, cada uma com:</p>
+<ul>
+<li><code>VersionId</code>: ID único da versão</li>
+<li><code>LastModified</code>: Timestamp de quando foi criada</li>
+<li><code>Size</code>: Tamanho do arquivo</li>
+<li><code>IsLatest</code>: Indica qual é a versão mais recente</li>
+</ul>
+<h3 id="passo-9-recuperar-versão-anterior-teste-de-ransomware">Passo 9: Recuperar Versão Anterior (Teste de Ransomware)</h3>
+<p>Para simular recuperação após ataque, baixe a versão original usando o <code>VersionId</code>:</p>
+<pre><code class="language-bash"><span class="hljs-comment"># Copie o VersionId da primeira versão do comando anterior</span>
+aws s3api get-object --bucket bucketbackup2025 --key backup_v1.zip --version-id &lt;VERSION_ID&gt; backup_v1_recuperado.zip
+</code></pre>
+<p>Descompacte e verifique que o conteúdo original foi recuperado:</p>
+<pre><code class="language-bash">unzip -p backup_v1_recuperado.zip
+</code></pre>
+<h3 id="passo-10-validar-proteção-contra-exclusão">Passo 10: Validar Proteção Contra Exclusão</h3>
+<p>Tente &quot;deletar&quot; o arquivo:</p>
+<pre><code class="language-bash">aws s3 <span class="hljs-built_in">rm</span> s3://bucketbackup2025/backup_v1.zip
+</code></pre>
+<p>Liste as versões novamente:</p>
+<pre><code class="language-bash">aws s3api list-object-versions --bucket bucketbackup2025
+</code></pre>
+<p>Você verá que todas as versões ainda existem, e uma nova entrada <code>DeleteMarkers</code> foi criada. O arquivo pode ser completamente restaurado removendo o marcador de exclusão.</p>
+<h3 id="passo-11-destruir-os-recursos-importante">Passo 11: Destruir os Recursos (IMPORTANTE)</h3>
+<p><strong>Após concluir a atividade</strong>, destrua todos os recursos para evitar cobranças:</p>
+<pre><code class="language-bash"><span class="hljs-comment"># Primeiro, remova todos os objetos e versões do bucket</span>
+aws s3api delete-objects --bucket bucketbackup2025 --delete <span class="hljs-string">&quot;<span class="hljs-subst">$(aws s3api list-object-versions --bucket bucketbackup2025 --query=&#x27;{Objects: Versions[].{Key:Key,VersionId:VersionId}}&#x27;)</span>&quot;</span>
+
+<span class="hljs-comment"># Depois, destrua a infraestrutura</span>
+<span class="hljs-built_in">cd</span> terraform
+terraform destroy
+</code></pre>
+<p>Digite <code>yes</code> para confirmar. Todos os recursos serão removidos da AWS.</p>
+<hr>
+<h2 id="4-comparativo-de-serviços-de-armazenamento-em-nuvem-com-backup">4. Comparativo de Serviços de Armazenamento em Nuvem com Backup</h2>
+<table>
+<thead>
+<tr>
+<th><strong>Serviço</strong></th>
+<th><strong>Plano / Preço</strong></th>
+<th><strong>Recursos Principais</strong></th>
+<th><strong>Backup / Versionamento</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Amazon S3</strong></td>
+<td>Standard<br>~$0,023/GB/mês</td>
+<td>Durabilidade 99,999999999%, integração AWS, classes de armazenamento (S3 Glacier), lifecycles</td>
+<td>Object Versioning nativo, MFA Delete, Object Lock (WORM)</td>
+</tr>
+<tr>
+<td><strong>Google Cloud Storage</strong></td>
+<td>Standard<br>~$0,020/GB/mês</td>
+<td>Alta durabilidade (11 noves), integração GCP, classes de armazenamento frio (Nearline, Coldline)</td>
+<td>Object Versioning nativo, retenção configurável, Bucket Lock</td>
+</tr>
+<tr>
+<td><strong>Azure Blob Storage</strong></td>
+<td>LRS<br>~$0,018/GB/mês</td>
+<td>Integração Azure, hot/cool/archive tiers, lifecycle management</td>
+<td>Soft Delete + Versioning, até 365 dias de retenção, Immutable storage</td>
+</tr>
+<tr>
+<td><strong>Backblaze B2</strong></td>
+<td>~$0,006/GB/mês</td>
+<td>API S3-compatível, baixo custo, 10 GB gratuitos, CDN parceiros (Cloudflare)</td>
+<td>File Versioning por 30 dias (plano pago), Lifecycle Rules</td>
+</tr>
+</tbody>
+</table>
+<h3 id="serviço-escolhido-e-justificativa">Serviço Escolhido e Justificativa</h3>
+<p>Para esta atividade, <strong>Amazon S3</strong> foi escolhido pelos seguintes motivos:</p>
+<ol>
+<li><strong>Integração com AWS</strong>: A disciplina já utiliza outros serviços AWS (RDS em atividades anteriores), mantendo consistência no ecossistema</li>
+<li><strong>Maturidade e Confiabilidade</strong>: S3 é o serviço de armazenamento em nuvem mais estabelecido e testado do mercado</li>
+<li><strong>Recursos Avançados de Segurança</strong>: Oferece Object Lock (compliance mode), MFA Delete e integração nativa com AWS IAM e KMS</li>
+<li><strong>Durabilidade</strong>: 99,999999999% (11 noves) de durabilidade anual dos dados</li>
+</ol>
+<p><strong>Alternativas válidas por caso de uso</strong>:</p>
+<ul>
+<li><strong>Backblaze B2</strong>: Ideal para projetos com orçamento limitado (~70% mais barato que S3), especialmente para armazenamento de longo prazo</li>
+<li><strong>Google Cloud Storage</strong>: Melhor escolha quando há dependência do ecossistema Google (BigQuery, GKE, análise de dados)</li>
+<li><strong>Azure Blob Storage</strong>: Preferível para organizações já investidas no ecossistema Microsoft (Azure AD, Office 365)</li>
+</ul>
+<p>A escolha final depende do ecossistema já adotado pela organização e dos requisitos específicos de custo, compliance e integração.</p>
+<hr>
+<h2 id="5-serviços-complementares-para-segurança-em-nuvem">5. Serviços Complementares para Segurança em Nuvem</h2>
+<p>Além do armazenamento com backup versionado, uma estratégia completa de segurança em nuvem deve incluir:</p>
+<h3 id="proteção-contra-ddos">Proteção Contra DDoS</h3>
+<ul>
+<li><strong>AWS Shield</strong> / <strong>Azure DDoS Protection</strong> / <strong>Google Cloud Armor</strong></li>
+<li>Proteção contra ataques de negação de serviço (DDoS)</li>
+<li>Garante disponibilidade das aplicações mesmo sob ataque volumétrico</li>
+<li>Essencial para aplicações públicas e sistemas críticos</li>
+</ul>
+<h3 id="gerenciamento-de-chaves-de-criptografia">Gerenciamento de Chaves de Criptografia</h3>
+<ul>
+<li><strong>AWS KMS</strong> / <strong>Azure Key Vault</strong> / <strong>Google Cloud KMS</strong></li>
+<li>Gerenciamento centralizado de chaves de criptografia</li>
+<li>Protege dados em repouso (encryption at rest) e em trânsito (encryption in transit)</li>
+<li>Permite criptografia do lado do servidor para backups no S3</li>
+<li>Auditoria completa de uso de chaves</li>
+</ul>
+<h3 id="controle-de-acesso-e-identidade">Controle de Acesso e Identidade</h3>
+<ul>
+<li><strong>AWS IAM</strong> / <strong>Azure Active Directory</strong> / <strong>Google IAM</strong></li>
+<li>Controle de acesso baseado em funções (RBAC)</li>
+<li>Princípio do menor privilégio: usuários têm apenas permissões necessárias</li>
+<li>Previne acessos não autorizados que possam comprometer ou excluir backups</li>
+<li>Suporte a autenticação multifator (MFA)</li>
+</ul>
+<h3 id="auditoria-e-monitoramento">Auditoria e Monitoramento</h3>
+<ul>
+<li><strong>AWS CloudTrail</strong> / <strong>Azure Monitor</strong> / <strong>Google Cloud Logging</strong></li>
+<li>Registro de todas as ações realizadas na conta (log de auditoria)</li>
+<li>Permite detectar acessos suspeitos ou alterações em arquivos</li>
+<li>Alertas em tempo real para atividades anômalas</li>
+<li>Essencial para resposta a incidentes como ransomware</li>
+<li>Integração com SIEM (Security Information and Event Management)</li>
+</ul>
+<h3 id="defesa-em-profundidade">Defesa em Profundidade</h3>
+<p>Esses serviços, combinados com o backup versionado, formam uma <strong>estratégia de defesa em profundidade</strong>:</p>
+<ol>
+<li><strong>Prevenção</strong>: IAM e KMS impedem acessos não autorizados</li>
+<li><strong>Detecção</strong>: CloudTrail e Cloud Armor identificam ameaças em tempo real</li>
+<li><strong>Resposta</strong>: Versionamento e backups permitem recuperação rápida</li>
+<li><strong>Resiliência</strong>: Shield garante disponibilidade durante ataques</li>
+</ol>
+<p>O backup garante a recuperação dos dados após um incidente, enquanto os demais serviços atuam na prevenção e detecção precoce de ameaças, minimizando a janela de exposição.</p>
+<hr>
+<h2 id="6-conclusão">6. Conclusão</h2>
+<p>A implementação de backup com versionamento no Amazon S3 foi concluída com sucesso, demonstrando uma técnica fundamental para proteção contra ransomware e outros ataques que comprometem a integridade dos dados. O versionamento automático garante que versões anteriores de arquivos permaneçam acessíveis mesmo após sobrescrita ou exclusão, proporcionando uma camada crítica de resiliência.</p>
+<p><strong>Conhecimentos reforçados:</strong></p>
+<ol>
+<li>
+<p><strong>AWS S3</strong>: Compreensão prática de armazenamento em nuvem, incluindo versionamento de objetos, gerenciamento de ciclo de vida e configuração de buckets</p>
+</li>
+<li>
+<p><strong>Terraform</strong>: Continuidade na aplicação de Infrastructure as Code para provisionar recursos de forma reproduzível e versionável</p>
+</li>
+<li>
+<p><strong>AWS CLI</strong>: Operações avançadas com S3, incluindo listagem de versões, recuperação de objetos específicos e manipulação de metadados</p>
+</li>
+<li>
+<p><strong>Segurança em Nuvem</strong>: Entendimento de estratégias de backup, recuperação de desastres e mitigação de ransomware através de múltiplas camadas de proteção</p>
+</li>
+<li>
+<p><strong>Arquitetura de Segurança</strong>: Visão holística de como diferentes serviços (armazenamento, criptografia, controle de acesso, auditoria) se complementam para formar uma defesa robusta</p>
+</li>
+</ol>
+<p>A experiência consolidou o princípio de que <strong>backup não é opcional</strong>, mas sim um componente essencial de qualquer arquitetura em nuvem. O versionamento automático, combinado com políticas adequadas de retenção e teste regular de recuperação, fornece proteção eficaz contra erros humanos, falhas de sistema e ataques maliciosos. A capacidade de recuperar dados rapidamente após um incidente pode significar a diferença entre uma pequena interrupção e uma perda catastrófica de dados.</p>
+
+            <script async src="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.js"></script>
+            
+        </body>
+        </html>
